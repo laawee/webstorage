@@ -23,6 +23,7 @@ const App = () => {
       Region: process.env.REACT_APP_COS_REGION,
     }, (err, data) => {
       if (err) {
+        console.error('Failed to fetch files:', err);
         message.error('Failed to fetch files');
       } else {
         setFiles(data.Contents);
@@ -30,14 +31,25 @@ const App = () => {
     });
   };
 
-  const handleUpload = (info) => {
-    const { status } = info.file;
-    if (status === 'done') {
-      message.success(`${info.file.name} file uploaded successfully.`);
-      fetchFiles();
-    } else if (status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
-    }
+  const handleUpload = ({ file, onSuccess, onError }) => {
+    console.log('Uploading file:', file.name);
+    cos.putObject({
+      Bucket: process.env.REACT_APP_COS_BUCKET,
+      Region: process.env.REACT_APP_COS_REGION,
+      Key: file.name,
+      Body: file,
+    }, (err, data) => {
+      if (err) {
+        console.error('Upload failed:', err);
+        message.error(`${file.name} upload failed.`);
+        onError(err);
+      } else {
+        console.log('Upload successful:', data);
+        message.success(`${file.name} uploaded successfully.`);
+        onSuccess();
+        fetchFiles();
+      }
+    });
   };
 
   const handleDelete = (key) => {
@@ -47,8 +59,10 @@ const App = () => {
       Key: key,
     }, (err, data) => {
       if (err) {
+        console.error('Delete failed:', err);
         message.error('Failed to delete file');
       } else {
+        console.log('Delete successful:', data);
         message.success('File deleted successfully');
         fetchFiles();
       }
@@ -66,21 +80,7 @@ const App = () => {
       <Content style={{ padding: '0 50px' }}>
         <div className="site-layout-content" style={{ margin: '16px 0' }}>
           <Upload
-            customRequest={({ file, onSuccess }) => {
-              cos.putObject({
-                Bucket: process.env.REACT_APP_COS_BUCKET,
-                Region: process.env.REACT_APP_COS_REGION,
-                Key: file.name,
-                Body: file,
-              }, (err, data) => {
-                if (err) {
-                  message.error('Upload failed');
-                } else {
-                  onSuccess();
-                }
-              });
-            }}
-            onChange={handleUpload}
+            customRequest={handleUpload}
           >
             <Button icon={<UploadOutlined />}>Click to Upload</Button>
           </Upload>
