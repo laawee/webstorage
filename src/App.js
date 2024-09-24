@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Upload, message, List, Button } from 'antd';
 import { UploadOutlined, FileOutlined, DeleteOutlined } from '@ant-design/icons';
