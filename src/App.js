@@ -30,39 +30,42 @@ const cos = new COS({
 const QuarkCloudStorage = () => {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState('/');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchFiles(currentPath);
   }, [currentPath]);
 
-  const fetchFiles = (path) => {
-    cos.getBucket({
-      Bucket: process.env.REACT_APP_COS_BUCKET,
-      Region: process.env.REACT_APP_COS_REGION,
-      Prefix: path,
-      Delimiter: '/',
-    }, (err, data) => {
-      if (err) {
-        console.error('Failed to fetch files:', err);
-        message.error('Failed to fetch files');
-      } else {
-        const folders = data.CommonPrefixes.map(prefix => ({
-          key: prefix.Prefix,
-          name: prefix.Prefix.split('/').slice(-2)[0],
-          isFolder: true,
-          size: '-',
-          lastModified: '-',
-        }));
-        const files = data.Contents.filter(file => file.Key !== path).map(file => ({
-          key: file.Key,
-          name: file.Key.split('/').pop(),
-          isFolder: false,
-          size: (file.Size / 1024).toFixed(2) + ' KB',
-          lastModified: new Date(file.LastModified).toLocaleString(),
-        }));
-        setFiles([...folders, ...files]);
-      }
-    });
+  const fetchFiles = async (path) => {
+    setLoading(true);
+    try {
+      const data = await cos.getBucket({
+        Bucket: process.env.REACT_APP_COS_BUCKET,
+        Region: process.env.REACT_APP_COS_REGION,
+        Prefix: path,
+        Delimiter: '/',
+      });
+      const folders = data.CommonPrefixes.map(prefix => ({
+        key: prefix.Prefix,
+        name: prefix.Prefix.split('/').slice(-2)[0],
+        isFolder: true,
+        size: '-',
+        lastModified: '-',
+      }));
+      const files = data.Contents.filter(file => file.Key !== path).map(file => ({
+        key: file.Key,
+        name: file.Key.split('/').pop(),
+        isFolder: false,
+        size: (file.Size / 1024).toFixed(2) + ' KB',
+        lastModified: new Date(file.LastModified).toLocaleString(),
+      }));
+      setFiles([...folders, ...files]);
+    } catch (err) {
+      console.error('Failed to fetch files:', err);
+      message.error('Failed to fetch files');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpload = ({ file, onSuccess, onError }) => {
@@ -183,12 +186,18 @@ const QuarkCloudStorage = () => {
             </Upload>
             <Button icon={<FolderAddOutlined />}>新建文件夹</Button>
           </Space>
-          <Table 
-            columns={columns} 
-            dataSource={files} 
-            pagination={false}
-            title={() => `全部文件 ${files.length}`}
-          />
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Table 
+              columns={columns} 
+              dataSource={files} 
+              pagination={false}
+              title={() => `全部文件 ${files.length}`}
+            />
+          )}
         </Content>
       </Layout>
     </Layout>
