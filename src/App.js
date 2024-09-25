@@ -26,38 +26,50 @@ const cos = new COS({
   SecretKey: process.env.REACT_APP_COS_SECRET_KEY,
 });
 
-const App = () => {
+const QuarkCloudStorage = () => {
   const [files, setFiles] = useState([]);
+  const [currentPath, setCurrentPath] = useState('/');
 
   useEffect(() => {
-    fetchFiles();
-  }, []);
+    fetchFiles(currentPath);
+  }, [currentPath]);
 
-  const fetchFiles = () => {
+  const fetchFiles = (path) => {
     cos.getBucket({
       Bucket: process.env.REACT_APP_COS_BUCKET,
       Region: process.env.REACT_APP_COS_REGION,
+      Prefix: path,
+      Delimiter: '/',
     }, (err, data) => {
       if (err) {
         console.error('Failed to fetch files:', err);
         message.error('Failed to fetch files');
       } else {
-        setFiles(data.Contents.map(file => ({
+        const folders = data.CommonPrefixes.map(prefix => ({
+          key: prefix.Prefix,
+          name: prefix.Prefix.split('/').slice(-2)[0],
+          isFolder: true,
+          size: '-',
+          lastModified: '-',
+        }));
+        const files = data.Contents.filter(file => file.Key !== path).map(file => ({
           key: file.Key,
-          name: file.Key,
+          name: file.Key.split('/').pop(),
+          isFolder: false,
           size: (file.Size / 1024).toFixed(2) + ' KB',
           lastModified: new Date(file.LastModified).toLocaleString(),
-        })));
+        }));
+        setFiles([...folders, ...files]);
       }
     });
   };
 
   const handleUpload = ({ file, onSuccess, onError }) => {
-    console.log('Uploading file:', file.name);
+    const key = currentPath + file.name;
     cos.putObject({
       Bucket: process.env.REACT_APP_COS_BUCKET,
       Region: process.env.REACT_APP_COS_REGION,
-      Key: file.name,
+      Key: key,
       Body: file,
     }, (err, data) => {
       if (err) {
@@ -68,9 +80,36 @@ const App = () => {
         console.log('Upload successful:', data);
         message.success(`${file.name} uploaded successfully.`);
         onSuccess();
-        fetchFiles();
+        fetchFiles(currentPath);
       }
     });
+  };
+
+  const getTemporaryUrl = (file) => {
+    if (file.isFolder) return;
+    cos.getObjectUrl({
+      Bucket: process.env.REACT_APP_COS_BUCKET,
+      Region: process.env.REACT_APP_COS_REGION,
+      Key: file.key,
+      Sign: true,
+      Expires: 3600,
+    }, (err, data) => {
+      if (err) {
+        console.error('Failed to get temporary URL:', err);
+        message.error('Failed to get temporary URL');
+      } else {
+        message.success(`Temporary URL: ${data.Url}`);
+        console.log('Temporary URL:', data.Url);
+      }
+    });
+  };
+
+  const handleFileClick = (file) => {
+    if (file.isFolder) {
+      setCurrentPath(file.key);
+    } else {
+      getTemporaryUrl(file);
+    }
   };
 
   const columns = [
@@ -78,7 +117,12 @@ const App = () => {
       title: '文件名',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => <Space><FolderOutlined />{text}</Space>,
+      render: (text, record) => (
+        <Space style={{ cursor: 'pointer' }} onClick={() => handleFileClick(record)}>
+          {record.isFolder ? <FolderOutlined /> : <FileOutlined />}
+          {text}
+        </Space>
+      ),
     },
     {
       title: '大小',
@@ -133,4 +177,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default QuarkCloudStorage;
