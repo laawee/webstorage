@@ -24,8 +24,8 @@ const { Header, Sider, Content } = Layout;
 const { Search } = Input;
 
 const cos = new COS({
-  SecretId: process.env.REACT_APP_COS_SECRET_ID,
-  SecretKey: process.env.REACT_APP_COS_SECRET_KEY,
+  SecretId: process.env.COS_SECRET_ID,
+  SecretKey: process.env.COS_SECRET_KEY,
 });
 
 const QuarkCloudStorage = () => {
@@ -41,8 +41,8 @@ const QuarkCloudStorage = () => {
     setLoading(true);
     try {
       const data = await cos.getBucket({
-        Bucket: process.env.REACT_APP_COS_BUCKET,
-        Region: process.env.REACT_APP_COS_REGION,
+        Bucket: process.env.COS_BUCKET,
+        Region: process.env.COS_REGION,
         Prefix: path,
         Delimiter: '/',
       });
@@ -72,8 +72,8 @@ const QuarkCloudStorage = () => {
   const handleUpload = ({ file, onSuccess, onError }) => {
     const key = currentPath + file.name;
     cos.putObject({
-      Bucket: process.env.REACT_APP_COS_BUCKET,
-      Region: process.env.REACT_APP_COS_REGION,
+      Bucket: process.env.COS_BUCKET,
+      Region: process.env.COS_REGION,
       Key: key,
       Body: file,
     }, (err, data) => {
@@ -93,8 +93,8 @@ const QuarkCloudStorage = () => {
   const getTemporaryUrl = (file) => {
     if (file.isFolder) return;
     cos.getObjectUrl({
-      Bucket: process.env.REACT_APP_COS_BUCKET,
-      Region: process.env.REACT_APP_COS_REGION,
+      Bucket: process.env.COS_BUCKET,
+      Region: process.env.COS_REGION,
       Key: file.key,
       Sign: true,
       Expires: 3600,
