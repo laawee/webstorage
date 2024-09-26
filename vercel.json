@@ -1,10 +1,21 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "rewrites": [
+  "version": 2,
+  "env": {
+    "REACT_APP_COS_SECRET_ID": "@cos_secret_id",
+    "REACT_APP_COS_SECRET_KEY": "@cos_secret_key",
+    "REACT_APP_COS_BUCKET": "@cos_bucket",
+    "REACT_APP_COS_REGION": "@cos_region"
+  },
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "src/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
