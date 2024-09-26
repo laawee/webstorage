@@ -1,8 +1,12 @@
-import COS from 'cos-js-sdk-v5';
+import { S3Client, ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
-const cos = new COS({
-  SecretId: process.env.COS_SECRET_ID,
-  SecretKey: process.env.COS_SECRET_KEY,
+const s3Client = new S3Client({
+  region: process.env.COS_REGION,
+  credentials: {
+    accessKeyId: process.env.COS_SECRET_ID,
+    secretAccessKey: process.env.COS_SECRET_KEY,
+  },
+  endpoint: `https://${process.env.COS_BUCKET}.cos.${process.env.COS_REGION}.myqcloud.com`,
 });
 
 export default async function handler(req, res) {
@@ -36,35 +40,33 @@ export default async function handler(req, res) {
 }
 
 async function getBucketContents(path) {
-  return new Promise((resolve, reject) => {
-    cos.getBucket({
-      Bucket: process.env.COS_BUCKET,
-      Region: process.env.COS_REGION,
-      Prefix: path,
-      Delimiter: '/',
-    }, (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
+  const command = new ListObjectsCommand({
+    Bucket: process.env.COS_BUCKET,
+    Prefix: path,
+    Delimiter: '/',
   });
+
+  try {
+    const response = await s3Client.send(command);
+    return response;
+  } catch (error) {
+    console.error("Error", error);
+    throw error;
+  }
 }
 
 async function uploadFile(file, path) {
-  return new Promise((resolve, reject) => {
-    cos.putObject({
-      Bucket: process.env.COS_BUCKET,
-      Region: process.env.COS_REGION,
-      Key: path + file.name,
-      Body: file,
-    }, (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
+  const command = new PutObjectCommand({
+    Bucket: process.env.COS_BUCKET,
+    Key: path + file.name,
+    Body: file,
   });
+
+  try {
+    const response = await s3Client.send(command);
+    return response;
+  } catch (error) {
+    console.error("Error", error);
+    throw error;
+  }
 }
