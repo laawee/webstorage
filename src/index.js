@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';  // 确保这里的 'App' 与文件名大小写完全匹配
+import './index.css';
+import App from './App';
 
 ReactDOM.render(
   <React.StrictMode>
