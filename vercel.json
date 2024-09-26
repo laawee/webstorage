@@ -9,9 +9,6 @@
       }
     }
   ],
-  "scripts": {
-    "build": "react-scripts build"
-  },
   "rewrites": [
     {
       "source": "/(.*)",
