@@ -97,14 +97,97 @@ const QuarkCloudStorage = () => {
     if (file.isFolder) {
       setCurrentPath(file.key)
     } else {
-      // Handle file click (e.g., download or preview)
+      message.info(`File clicked: ${file.name}`)
+      // Here you can implement file preview or download logic
     }
   }
 
-  // ... (其余代码保持不变)
+  const columns = [
+    {
+      title: '文件名',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text, record) => (
+        <Space style={{ cursor: 'pointer' }} onClick={() => handleFileClick(record)}>
+          {record.isFolder ? <FolderOutlined /> : <FileOutlined />}
+          {text}
+        </Space>
+      ),
+    },
+    {
+      title: '大小',
+      dataIndex: 'size',
+      key: 'size',
+    },
+    {
+      title: '修改日期',
+      dataIndex: 'lastModified',
+      key: 'lastModified',
+    },
+  ]
 
   return (
-    // ... (JSX 结构保持不变)
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider width={200} theme="light">
+        <div className={styles.userInfo}>
+          <Space direction="vertical" align="center" style={{ width: '100%' }}>
+            <UserOutlined className={styles.userIcon}/>
+            <div>夸克8148</div>
+            <Progress percent={35} size="small" style={{ width: '80%' }} />
+            <div className={styles.storageInfo}>3.5G/10G</div>
+          </Space>
+        </div>
+        <Menu mode="inline" defaultSelectedKeys={['1']} className={styles.menu}>
+          <Menu.Item key="1" icon={<FolderOutlined />}>全部文件</Menu.Item>
+          <Menu.Item key="2" icon={<ClockCircleOutlined />}>最近</Menu.Item>
+          <Menu.Item key="3" icon={<VideoCameraOutlined />}>视频</Menu.Item>
+          <Menu.Item key="4" icon={<PictureOutlined />}>图片</Menu.Item>
+          <Menu.Item key="5" icon={<FileOutlined />}>文档</Menu.Item>
+          <Menu.Item key="6" icon={<CustomerServiceOutlined />}>音频</Menu.Item>
+          <Menu.Item key="7" icon={<LinkOutlined />}>BT种子</Menu.Item>
+          <Menu.Item key="8" icon={<ShareAltOutlined />}>我的分享</Menu.Item>
+        </Menu>
+      </Sider>
+      <Layout>
+        <Header className={styles.header}>
+          <div className={styles.logoContainer}>
+            <img src="/logo.png" alt="Quark Cloud Logo" className={styles.logo}/>
+          </div>
+          <Space className={styles.headerActions}>
+            <Search
+              placeholder="搜索全部文件"
+              style={{ width: 200 }}
+              prefix={<SearchOutlined />}
+            />
+            <Button type="primary">新人专属优惠</Button>
+            <BellOutlined className={styles.headerIcon}/>
+            <DesktopOutlined className={styles.headerIcon}/>
+            <MobileOutlined className={styles.headerIcon}/>
+          </Space>
+        </Header>
+        <Content className={styles.content}>
+          <Space className={styles.contentActions}>
+            <Upload customRequest={handleUpload}>
+              <Button type="primary" icon={<UploadOutlined />}>上传文件</Button>
+            </Upload>
+            <Button icon={<FolderAddOutlined />}>新建文件夹</Button>
+          </Space>
+          {loading ? (
+            <div className={styles.loadingContainer}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={files}
+              pagination={false}
+              rowKey="key"
+              className={styles.fileTable}
+            />
+          )}
+        </Content>
+      </Layout>
+    </Layout>
   )
 }
 
