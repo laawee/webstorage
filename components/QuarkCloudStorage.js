@@ -43,20 +43,20 @@ const QuarkCloudStorage = () => {
       })
       const data = await response.json()
       if (response.ok) {
-        const folders = data.CommonPrefixes.map(prefix => ({
+        const folders = data.CommonPrefixes?.map(prefix => ({
           key: prefix.Prefix,
           name: prefix.Prefix.split('/').slice(-2)[0],
           isFolder: true,
           size: '-',
           lastModified: '-',
-        }))
-        const files = data.Contents.filter(file => file.Key !== path).map(file => ({
+        })) || []
+        const files = data.Contents?.filter(file => file.Key !== path).map(file => ({
           key: file.Key,
           name: file.Key.split('/').pop(),
           isFolder: false,
           size: (file.Size / 1024).toFixed(2) + ' KB',
           lastModified: new Date(file.LastModified).toLocaleString(),
-        }))
+        })) || []
         setFiles([...folders, ...files])
       } else {
         throw new Error(data.error || 'Failed to fetch files')
@@ -98,7 +98,6 @@ const QuarkCloudStorage = () => {
       setCurrentPath(file.key)
     } else {
       message.info(`File clicked: ${file.name}`)
-      // Here you can implement file preview or download logic
     }
   }
 
