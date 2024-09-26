@@ -1,21 +1,18 @@
 {
   "version": 2,
-  "env": {
-    "REACT_APP_COS_SECRET_ID": "@cos_secret_id",
-    "REACT_APP_COS_SECRET_KEY": "@cos_secret_key",
-    "REACT_APP_COS_BUCKET": "@cos_bucket",
-    "REACT_APP_COS_REGION": "@cos_region"
-  },
   "builds": [
     {
       "src": "src/index.js",
-      "use": "@vercel/node"
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
